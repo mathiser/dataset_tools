@@ -13,15 +13,14 @@ def convert_dicom_to_nii(i, o):
     os.system(f"dcm2niix -z y -m y -o {o} {i}")
 
 def get_sub_list(in_fol, out_fol):
-    for fol, subs, files in os.walk(in_fol):
-        for sub in subs:
-            for f in os.listdir(os.path.join(fol, sub)):
-                if f.endswith(".dcm"):
-                    yield (os.path.join(fol, sub), os.path.join(out_fol, sub))
-                    break
+    for patient_folder in os.listdir(in_fol):
+        for date_folder in os.listdir(os.path.join(in_fol, patient_folder)):
+            yield os.path.join(in_fol, patient_folder, date_folder), os.path.join(out_fol, patient_folder, date_folder)
 
 if not os.path.exists(out_fol):
     os.makedirs(out_fol)
 
-p = Pool(16)
+p = Pool(int(os.environ.get("THREADS")))
 p.starmap(convert_dicom_to_nii, get_sub_list(in_fol, out_fol))
+p.close()
+p.join()

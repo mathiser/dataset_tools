@@ -6,7 +6,9 @@ RUN apt update && pip install \
 
 ENV INPUT="/input"
 ENV OUTPUT="/output"
+ENV RTSTRUCT_PATHS=$OUTPUT/rtstruct_paths.json
+
 RUN mkdir $INPUT $OUTPUT
 COPY main.py /main.py
-ENTRYPOINT ["bash", "-c", "python3 -u main.py $INPUT $OUTPUT"]
+ENTRYPOINT ["bash", "-c", "python3 -u main.py $INPUT $OUTPUT $RTSTRUCT_PATHS"]
 

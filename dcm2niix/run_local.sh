@@ -1,2 +1,2 @@
-docker run --mount type=bind,source=`realpath $1`,target=/input --mount type=bind,source=`realpath $2`,target=/output mathiser/image_preprocessing:dcm2niix
+docker run -e THREADS=64 -v `realpath $1`:/input:ro -v `realpath $2`:/output mathiser/dataset_tools:dcm2niix
 

@@ -1,20 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
+import json
 import sys
 import os
 import dcmrtstruct2nii
 import pydicom
 from multiprocessing import Pool
 
-dcm_folder = sys.argv[1]
-nii_folder = sys.argv[2]
-threads = int(os.environ.get("THREADS"))
-
-print(f"RTSTRUCT Dicom folder: {dcm_folder}")
-print(f"Nifti folder: {nii_folder}")
-
-if not os.path.exists(nii_folder):
-    os.makedirs(nii_folder)
 
 def extract_to_nii(file_path, out_folder):
     if os.path.exists(out_folder):
@@ -54,20 +46,45 @@ def zip_in_and_out(rtstruct_paths, out_path):
             pid = ds.PatientID
         
         out = os.path.join(out_path, f"{i}_{pid}")
-        zipped.append((r, out))
-    yield zipped
+        yield (r, out)
+        #zipped.append((r, out))
+    #yield zipped
 
-file_paths = find_all_rtstructs(dcm_folder)
-file_paths = set(file_paths)
-if None in file_paths:
-    file_paths.remove(None)
 
-#zipped = zip_in_and_out(file_paths, nii_folder)
+if __name__ == "__main__":
+    dcm_folder = sys.argv[1]
+    nii_folder = sys.argv[2]
+    print(f"RTSTRUCT Dicom folder: {dcm_folder}")
+    print(f"Nifti folder: {nii_folder}")
 
-## Convert the shit out of rtstructs
-p = Pool(threads)
-conversion = p.starmap(extract_to_nii, zip_in_and_out(file_paths, nii_folder))
-p.close()
-p.join()
+    threads = int(os.environ.get("THREADS"))
+    print(f"Threads: {threads}")
+
+    try:
+        with open(sys.argv[3], "r") as r:
+            file_paths = json.loads(r.read())
+            print(f"RTSTRUCT file paths: {file_paths}")
+    except Exception as e:
+        print(e)
+
+        file_paths = find_all_rtstructs(dcm_folder)
+        file_paths = set(file_paths)
+
+        if None in file_paths:
+            file_paths.remove(None)
+
+        if not os.path.exists(nii_folder):
+            os.makedirs(nii_folder)
+
+        with open(os.path.join(nii_folder, "rtstruct_paths.json"), "w") as f:
+            f.write(json.dumps(list(file_paths)))
+
+    #zipped = zip_in_and_out(file_paths, nii_folder)
+
+    ## Convert the shit out of rtstructs
+    p = Pool(threads)
+    conversion = p.starmap(extract_to_nii, zip_in_and_out(file_paths, nii_folder))
+    p.close()
+    p.join()
 
 
