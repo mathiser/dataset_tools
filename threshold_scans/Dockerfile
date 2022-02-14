@@ -12,6 +12,9 @@ ENV MASK_DIR="/labels"
 ENV OUT_DIR="/output"
 ENV THREADS=16
 
+ENV THRESHOLD_LOWER=1050
+ENV THRESHOLD_UPPER=1100
+
 COPY . /
 
 CMD ["bash", "-c", "python3 -u main.py" ]

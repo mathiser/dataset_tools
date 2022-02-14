@@ -10,7 +10,7 @@ def load_dataset(i, o):
 
     for fol, sub, files in os.walk(i):
         for file in files:
-            cl, pid, label = file.replace(".nii.gz", "").split("&", maxsplit=2)
+            cl, pid, label = file.replace(".nii.gz", "").split("_", maxsplit=2)
             df = df.append({"folder": fol, "file": file, "class": cl, "pid": pid, "label": label},
                            ignore_index=True)
 
