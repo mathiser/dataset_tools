@@ -20,22 +20,22 @@ def generate_bounds(i, out_dir):
 
         bounds_arr = np.zeros_like(arr)
 
-        for z in range(arr.shape[0]):
-            plane = arr[z, :, :]
+        for x in range(arr.shape[2]):
+            plane = arr[:, :, x]
             if True in np.any(plane, 1):
                 np.zeros_like(arr)
-                bounds_arr[z, :, :] = plane
+                bounds_arr[:, :, x] = plane
                 break
 
-        for z in range(arr.shape[0] - 1, 0, -1):
-            plane = arr[z, :, :]
+        for x in range(arr.shape[2] - 1, 0, -1):
+            plane = arr[:, :, x]
             if True in np.any(plane, 1):
                 np.zeros_like(arr)
-                bounds_arr[z, :, :] = plane
+                bounds_arr[:, :, x] = plane
                 break
 
         bounds_img = sitk.GetImageFromArray(bounds_arr)
-        out_path = os.path.join(out_dir, os.path.basename(i).replace(".nii.gz", "_bounds.nii.gz"))
+        out_path = os.path.join(out_dir, os.path.basename(i).replace(".nii.gz", "_xbounds.nii.gz"))
         print(f"Generating bounds for {i} into {out_path}")
         bounds_img.CopyInformation(img)
         sitk.WriteImage(bounds_img, out_path)
