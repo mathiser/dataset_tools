@@ -11,22 +11,21 @@ import numpy as np
 # Note that whenever only _L or _R exists, instance is ignored.
 # In order to run properly, one must mount /input and /output as docker --mount binds.
 label_map = {
-    "Brain_bounds.nii.gz": 1,
-    "Brainstem_bounds.nii.gz": 2,
-    "SpinalCord_bounds": 3,
-    "Lips_bounds.nii.gz": 4,
-    "Cochlea_merged_bounds.nii.gz": 5,
-    "Esophagus_bounds.nii.gz": 6,
-    "Parotid_merged_bounds.nii.gz": 7,
-    "PCM_Low_bounds.nii.gz": 8,
-    "PCM_Mid_bounds.nii.gz": 9,
-    "PCM_Up_bounds.nii.gz": 10,
-    "Mandible_bounds.nii.gz": 11,
-    "SMDB_merged_bounds.nii.gz": 12,
-    "Thyroid_bounds.nii.gz": 13,
-    "OpticNerve_merged_bounds.nii.gz": 14,
-    "EyeFront_merged_bounds.nii.gz": 15,
-    "EyeBack_merged_bounds.nii.gz": 16
+    f"Brain_bounds.nii.gz": 1,
+    f"Brainstem_bounds.nii.gz": 2,
+    f"SpinalCord_bounds": 3,
+    f"Lips_bounds.nii.gz": 4,
+    f"Esophagus_bounds.nii.gz": 6,
+    f"Parotid_bounds_merged.nii.gz": 7,
+    f"PCM_Low_bounds.nii.gz": 8,
+    f"PCM_Mid_bounds.nii.gz": 9,
+    f"PCM_Up_bounds.nii.gz": 10,
+    f"Mandible_bounds.nii.gz": 11,
+    f"Submandibular_bounds_merged.nii.gz": 12,
+    f"Thyroid_bounds.nii.gz": 13,
+    f"OpticNerve_bounds_merged.nii.gz": 14,
+    f"EyeFront_bounds_merged.nii.gz": 15,
+    f"EyeBack_bounds_merged.nii.gz": 16
 }
 
 def merge_files(files: dict, out_dir):
@@ -47,7 +46,7 @@ def merge_files(files: dict, out_dir):
     merged_img.CopyInformation(ref_img)
 
     ## Split label away from basename and add PCM_merged instead.
-    out_filename = os.path.basename(ref_path.rsplit("&", 1)[0]) + "&OAR_bounds_merged.nii.gz"
+    out_filename = os.path.basename(ref_path.rsplit("&", 1)[0]) + f"&OAR_bounds_merged.nii.gz"
     out_path = os.path.join(out_dir, out_filename)
     print(out_path)
     sitk.WriteImage(merged_img, out_path)

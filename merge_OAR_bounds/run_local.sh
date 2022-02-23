@@ -1,2 +1,2 @@
-docker run --mount type=bind,source=$(realpath $1),target=/input --mount type=bind,source=$(realpath $2),target=/output mathiser/dataset_tools:merge_bilaterals
+docker run -v $(realpath $1):/input -v $(realpath $2):/output -e BOUNDS_TEXT=$3 mathiser/dataset_tools:merge_OAR_bounds
 
