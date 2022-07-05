@@ -1,32 +1,32 @@
+import json
 import os
-import shutil
+from multiprocessing import Pool
 
 import SimpleITK as sitk
-from multiprocessing import Pool
 import numpy as np
+
 
 ## Author: Mathis Rasmussen
 ## 21-11-26
-## Loops through an /input of nifti file masks, and merges where two files ending with _L.nii.gz and _R.nii.gz exists.
-# Note that whenever only _L or _R exists, instance is ignored.
 # In order to run properly, one must mount /input and /output as docker --mount binds.
-label_map = {
-    f"Brain_bounds.nii.gz": 1,
-    f"Brainstem_bounds.nii.gz": 2,
-    f"SpinalCord_bounds": 3,
-    f"Lips_bounds.nii.gz": 4,
-    f"Esophagus_bounds.nii.gz": 6,
-    f"Parotid_bounds_merged.nii.gz": 7,
-    f"PCM_Low_bounds.nii.gz": 8,
-    f"PCM_Mid_bounds.nii.gz": 9,
-    f"PCM_Up_bounds.nii.gz": 10,
-    f"Mandible_bounds.nii.gz": 11,
-    f"Submandibular_bounds_merged.nii.gz": 12,
-    f"Thyroid_bounds.nii.gz": 13,
-    f"OpticNerve_bounds_merged.nii.gz": 14,
-    f"EyeFront_bounds_merged.nii.gz": 15,
-    f"EyeBack_bounds_merged.nii.gz": 16
-}
+# Labels must be added as ONE file to /labels/labels.json (any name suffices, but one file that ends with .json)
+
+def load_json(path):
+    with open(path, "r") as r:
+        label_dict = {k: int(v) for k, v in json.loads(r.read()).items()}
+    return label_dict
+
+## SET GLOBAL label_map
+for fol, subs, files in os.walk(os.environ.get("LABELS")):
+    for file in files:
+        if file.endswith(".json"):
+            label_map = load_json(os.path.join(fol, file))
+            print(label_map)
+            break
+
+## Author: Mathis Rasmussen
+## 21-11-26
+# In order to run properly, one must mount /labels/, /input and /output as docker --mount binds.
 
 def merge_files(files: dict, out_dir):
     ##init arr from first file in path_to_files
@@ -46,7 +46,7 @@ def merge_files(files: dict, out_dir):
     merged_img.CopyInformation(ref_img)
 
     ## Split label away from basename and add PCM_merged instead.
-    out_filename = os.path.basename(ref_path.rsplit("&", 1)[0]) + f"&OAR_bounds_merged.nii.gz"
+    out_filename = os.path.basename(ref_path.rsplit("&", 1)[0]) + f"OARs.nii.gz"
     out_path = os.path.join(out_dir, out_filename)
     print(out_path)
     sitk.WriteImage(merged_img, out_path)
@@ -61,15 +61,15 @@ def get_pairs(i, out_dir):
 
     for pid in pids:
         file_list = {}
-        for pcm, i in label_map.items():
-            name_guess = f"{pid}&{pcm}"
-            print(f"Name guess: {name_guess}")
+        for label, i in label_map.items():
+            name_guess = f"{pid}&{label}"
+            #print(f"Name guess: {name_guess}")
 
             if os.path.exists(name_guess):
                 print(f"Exists: {name_guess}")
-                file_list[pcm] = name_guess
-            else:
-                print(f"NOT FOUND: {name_guess}")
+                file_list[label] = name_guess
+            #else:
+                #print(f"NOT FOUND: {name_guess}")
 
         if len(file_list) > 0:
             yield file_list, out_dir

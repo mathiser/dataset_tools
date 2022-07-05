@@ -9,8 +9,10 @@ RUN pip3 install \
 
 ENV INPUT="/input"
 ENV OUTPUT="/output"
+ENV LABELS="/labels"
+
 ENV THREADS=16
-RUN mkdir $INPUT $OUTPUT
+RUN mkdir $INPUT $OUTPUT $LABELS
 
 COPY . /
 
