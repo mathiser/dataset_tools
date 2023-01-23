@@ -10,7 +10,7 @@ RUN pip3 install -r /requirements.txt
 ENV SCAN_DIR="/images"
 ENV MASK_DIR="/labels"
 ENV OUT_DIR="/output"
-ENV THREADS=16
+ENV THREADS=8
 
 COPY . /
 

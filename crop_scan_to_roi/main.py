@@ -2,7 +2,7 @@ import os
 import SimpleITK as sitk
 import numpy as np
 from multiprocessing import Pool
-
+import json
 
 # Author: Mathis Rasmussen
 # 21-12-03
@@ -66,7 +66,7 @@ def crop_image(img, coords):
 def save_img(img, cropped_img_path):
     return sitk.WriteImage(img, cropped_img_path)
 
-def crop_imgs_to_mask(scan_paths, mask_path, scan_out_dir, mask_out_dir, padding=(15, 15, 7)):
+def crop_imgs_to_mask(scan_paths, mask_path, scan_out_dir, mask_out_dir, padding=(7, 15, 15)):
     mask = sitk.ReadImage(mask_path)
     mask_arr = sitk.GetArrayFromImage(mask)
     print(f"Loading {scan_paths}")
@@ -77,7 +77,6 @@ def crop_imgs_to_mask(scan_paths, mask_path, scan_out_dir, mask_out_dir, padding
     print(f"Saving cropped mask of {mask_path}")
     cropped_mask_path = os.path.join(mask_out_dir, os.path.basename(mask_path))
     save_img(cropped_mask, cropped_mask_path)
-    
 
     for scan in scan_paths:
         img = sitk.ReadImage(scan)
@@ -86,6 +85,7 @@ def crop_imgs_to_mask(scan_paths, mask_path, scan_out_dir, mask_out_dir, padding
         cropped_img_path = os.path.join(scan_out_dir, os.path.basename(scan))
         save_img(cropped_img, cropped_img_path)
 
+    return [mask_path, bbox]
     
 
 def data_loader(scan_dir, mask_dir, out_dir, padding):
@@ -111,20 +111,22 @@ def data_loader(scan_dir, mask_dir, out_dir, padding):
             if len(f_scans) == 0:
                 raise Exception(f"Error in {f_mask_basename} - not found in scan_dir")
             else:
-                yield (f_scans, mask_path, scan_out_dir, mask_out_dir, padding)
+                yield [f_scans, mask_path, scan_out_dir, mask_out_dir, padding]
 
 
 def main(scan_dir, mask_dir, out_dir, padding, threads):
     p = Pool(threads)
-    p.starmap(crop_imgs_to_mask, data_loader(scan_dir, mask_dir, out_dir, padding))
+    res = p.starmap(crop_imgs_to_mask, data_loader(scan_dir, mask_dir, out_dir, padding))
     p.close()
     p.join()
 
+    with open(os.path.join(out_dir, "bboxes.json"), "w") as f:
+        f.write(json.dumps(res))
 
 if __name__ == "__main__":
     main(scan_dir=os.environ["SCAN_DIR"],
          mask_dir=os.environ["MASK_DIR"],
          out_dir=os.environ["OUT_DIR"],
-         padding=(int(os.environ["X_PADDING"]), int(os.environ["Y_PADDING"]), int(os.environ["Z_PADDING"])),
+         padding=(int(os.environ["Z_PADDING"]), int(os.environ["Y_PADDING"]), int(os.environ["X_PADDING"])),
          threads=int(os.environ["THREADS"])
          )
